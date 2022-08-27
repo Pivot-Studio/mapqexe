@@ -19,11 +19,11 @@ func TestQueryMap(t *testing.T) {
 		// 基础功能测试
 		{"basic true case", args{map[string]interface{}{"a": 1}, "a==1"}, true, false},
 		{"basic false case", args{map[string]interface{}{"a": 1}, "a==2"}, false, false},
-		{"and true case", args{map[string]interface{}{"a": 1, "b": 2}, "a==1&&b==2"}, true, false},
+		{"and true case", args{map[string]interface{}{"a": 1, "b": 2}, "a==1&&b==2&&true"}, true, false},
 		{"and false case", args{map[string]interface{}{"a": 1, "b": 2}, "a==1&&b==3"}, false, false},
 		{"or true case", args{map[string]interface{}{"a": 1, "b": 2}, "a==1||b==2"}, true, false},
 		{"or true case2", args{map[string]interface{}{"a": 1, "b": 2}, "a==1||b==3"}, true, false},
-		{"or false case", args{map[string]interface{}{"a": 1, "b": 2}, "a<=0||b>3"}, false, false},
+		{"or false case", args{map[string]interface{}{"a": 1, "b": 2}, "a<=0||b>3||false"}, false, false},
 		{"LEQ SM case", args{map[string]interface{}{"a": 1, "b": 2}, "a<2&&b>=2"}, true, false},
 		{"nested case", args{map[string]interface{}{"a": 1, "b": 2, "c": map[string]interface{}{"d": 3}},
 			"a==1&&b==2&&c.d==3"}, true, false},
@@ -42,6 +42,12 @@ func TestQueryMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				err := recover()
+				if err != nil {
+					t.Errorf("panic error: %v", err)
+				}
+			}()
 			got, err := QueryMap(tt.args.data, tt.args.query)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("QueryMap() error = %v, wantErr %v", err, tt.wantErr)
@@ -72,9 +78,29 @@ func BenchmarkRunQuery(b *testing.B) {
 	datamap := make(map[string]interface{})
 	json.Unmarshal([]byte(obj), &datamap)
 	p := &Parser{}
-	root, _ := p.Parse("!(component_pos_x>300||component_pos_y<160&&component_extra.FontSize==12)||component_type=='TEXT'")
+	query := "!(component_pos_x>200||component_pos_y<160&&component_extra.FontSize==12)||(component_type=='TEXT1'&&(component_required==true||component_page!=null))"
+	root, _ := p.Parse(query)
+	b.Run("parse bench", func(b *testing.B) {
+		defer func() {
+			err := recover()
+			if err != nil {
+				b.Errorf("panic error: %v", err)
+			}
+		}()
+		for i := 0; i < b.N; i++ {
+			_, err := p.Parse(query)
+			if err != nil {
+				b.Error(err)
+			}
+		}
+	})
 	b.Run("query bench", func(b *testing.B) {
-
+		defer func() {
+			err := recover()
+			if err != nil {
+				b.Errorf("panic error: %v", err)
+			}
+		}()
 		for i := 0; i < b.N; i++ {
 			_, err := RunQuery(root, datamap)
 			if err != nil {
@@ -82,4 +108,5 @@ func BenchmarkRunQuery(b *testing.B) {
 			}
 		}
 	})
+
 }

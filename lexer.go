@@ -18,7 +18,7 @@ const (
 	TYPE_LEQ              // ">="
 	TYPE_SEQ              // "<="
 	TYPE_NEQ              // "!="
-	TYPE_STR              // a quoted string
+	TYPE_STR              // a quoted string(单引号)
 	TYPE_INT              // an integer
 	TYPE_FLOAT            // 小数，x.y这种
 	TYPE_UNKNOWN          // 未知的类型

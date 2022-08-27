@@ -37,7 +37,7 @@ func trytoF64(i interface{}) interface{} {
 }
 
 func equal(left, right interface{}) bool {
-	return reflect.DeepEqual(trytoF64(left), trytoF64(right)) // 提示：这里有性能更高的方法
+	return reflect.DeepEqual(trytoF64(left), trytoF64(right))
 }
 
 // BinNode 双目表达式节点
